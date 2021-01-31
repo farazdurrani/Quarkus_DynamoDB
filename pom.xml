@@ -60,6 +60,11 @@
     	<groupId>software.amazon.awssdk</groupId>
     	<artifactId>url-connection-client</artifactId>
 	</dependency>
+	<dependency>
+    	<groupId>com.amazonaws</groupId>
+    	<artifactId>aws-java-sdk-dynamodb</artifactId>
+    <version>1.11.945</version>
+</dependency>
   </dependencies>
   <build>
     <plugins>

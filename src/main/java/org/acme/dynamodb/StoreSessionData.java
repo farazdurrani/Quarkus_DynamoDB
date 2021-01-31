@@ -11,28 +11,28 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/fruits")
+@Path("/storesessiondata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class FruitResource {
+public class StoreSessionData {
 
     @Inject
-    FruitSyncService service;
+    SessionService service;
 
     @GET
-    public List<Fruit> getAll() {
-        return service.findAll();
+    public List<ShareData> getAll() {
+	return service.findAll();
     }
 
     @GET
     @Path("{name}")
-    public Fruit getSingle(@PathParam("name") String name) {
-        return service.get(name);
+    public ShareData getSingle(@PathParam("name") String name) {
+	return service.get(name);
     }
 
     @POST
-    public List<Fruit> add(Fruit fruit) {
-        service.add(fruit);
-        return getAll();
+    public List<ShareData> add(ShareData data) {
+	service.add(data);
+	return getAll();
     }
 }
