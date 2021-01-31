@@ -7,9 +7,9 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/storesessiondata")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,19 +20,13 @@ public class StoreSessionData {
     SessionService service;
 
     @GET
-    public List<ShareData> getAll() {
-	return service.findAll();
-    }
-
-    @GET
-    @Path("{name}")
-    public ShareData getSingle(@PathParam("name") String name) {
-	return service.get(name);
+    public List<ResponseData> getSingle(Request req) {
+	return service.get(req);
     }
 
     @POST
-    public List<ShareData> add(ShareData data) {
+    public Response add(ShareData data) {
 	service.add(data);
-	return getAll();
+	return Response.ok().build();
     }
 }

@@ -43,7 +43,6 @@ public class SessionRepo {
     void startup(@Observes StartupEvent event) {
 	dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
 		new AwsClientBuilder.EndpointConfiguration("http://127.0.0.1:8000/", "local")).build());
-
 	if (!isTableExist(tableName)) {
 	    createTable(tableName);
 	    loadInitialData(tableName);
@@ -92,22 +91,13 @@ public class SessionRepo {
 
     }
 
-    public List<Item> getAllItems() {
-	String primaryKey = "serviceName";
-	String primaryKeyValue = "A";
-	String queryColumn = "sharedData";
-	String queryColumnKey = "five";
-	return getSpecificData(tableName, primaryKey, primaryKeyValue, queryColumn, queryColumnKey);
-    }
-
-    private List<Item> getSpecificData(String tableName, String primaryKey, String primaryKeyValue, String queryColumn,
-	    String queryColumnKey) {
+    public List<Item> getSpecificData(Object... primaryKeyValues) {
 	List<Item> allItems = new ArrayList<>();
 	Map<String, KeysAndAttributes> unprocessed = null;
 	do {
-	    TableKeysAndAttributes forumTableKeysAndAttributes = new TableKeysAndAttributes(tableName);
-	    forumTableKeysAndAttributes.addHashOnlyPrimaryKeys(primaryKey, primaryKeyValue, primaryKey, "B");
-	    BatchGetItemOutcome outcome = dynamoDB.batchGetItem(forumTableKeysAndAttributes);
+	    TableKeysAndAttributes keysAndAttributes = new TableKeysAndAttributes(tableName);
+	    keysAndAttributes.addHashOnlyPrimaryKeys(primaryKey, primaryKeyValues);
+	    BatchGetItemOutcome outcome = dynamoDB.batchGetItem(keysAndAttributes);
 
 	    for (String tn : outcome.getTableItems().keySet()) {
 		System.out.println("Items in table " + tn);
