@@ -50,17 +50,23 @@ Data is structured in the following way:
  
  POST http://localhost:8090/storesessiondata 
  
- `{
+`{
     "serviceName":"B",
     "sharedData": {
         "KEY1": "VALUE",
         "KEY2": "VALUE"
     }
-
 }`
 
+It returns the data that's added in response and Http Status 200: 
+
+
+
 GET http://localhost:8090/storesessiondata
+
 `{
     "serviceName":"A",
     "key":"KEY1"
 }`
+
+It returns the data if key exists. 
