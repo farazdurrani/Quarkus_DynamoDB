@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
@@ -27,22 +29,24 @@ import com.amazonaws.services.dynamodbv2.model.KeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
 public class SessionRepo {
 
-    DynamoDB dynamoDB;
+    @ConfigProperty(name = "datasource.url")
+    String dataSourceUrl;
+
+    private DynamoDB dynamoDB;
 
     static final String tableName = "sharedData";
     static final String primaryKey = "serviceName";
     static final String queryColumn = "sharedData";
 
     void startup(@Observes StartupEvent event) {
-	dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard().withEndpointConfiguration(
-		new AwsClientBuilder.EndpointConfiguration("http://127.0.0.1:8000/", "local")).build());
+	dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard()
+		.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(dataSourceUrl, "local")).build());
 	if (!isTableExist(tableName)) {
 	    createTable(tableName);
 	    loadInitialData(tableName);
@@ -51,31 +55,22 @@ public class SessionRepo {
 
     public boolean isTableExist(String tableName) {
 	try {
-	    TableDescription tableDescription = dynamoDB.getTable(tableName).describe();
-	    System.out.println("Table Exists.\nTable description: " + tableDescription.getTableStatus());
-	    System.out.println("Number of records :: " + tableDescription.getItemCount());
+	    dynamoDB.getTable(tableName).describe();
 	    return true;
 	} catch (com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException rnfe) {
-	    System.out.println("Table does not exist");
+	    return false;
 	}
-	return false;
-
     }
 
     private void createTable(String tableName) {
-
 	try {
-	    System.out.println("Attempting to create table; please wait...");
 	    Table table = dynamoDB.createTable(tableName,
-		    Arrays.asList(new KeySchemaElement("serviceName", KeyType.HASH)),
-		    Arrays.asList(new AttributeDefinition("serviceName", ScalarAttributeType.S)),
+		    Arrays.asList(new KeySchemaElement(primaryKey, KeyType.HASH)),
+		    Arrays.asList(new AttributeDefinition(primaryKey, ScalarAttributeType.S)),
 		    new ProvisionedThroughput(10L, 10L));
 	    table.waitForActive();
-	    System.out.println("Success.  Table status: " + table.getDescription().getTableStatus());
-
 	} catch (Exception e) {
-	    System.err.println("Unable to create table: ");
-	    System.err.println(e.getMessage());
+	    e.printStackTrace();
 	}
     }
 
@@ -86,7 +81,7 @@ public class SessionRepo {
 	sharedData.put("one", "1");
 	sharedData.put("two", "2");
 	sharedData.put("three", "3");
-	Item item = new Item().withPrimaryKey("serviceName", serviceName).withMap("sharedData", sharedData);
+	Item item = new Item().withPrimaryKey(primaryKey, serviceName).withMap(queryColumn, sharedData);
 	table.putItem(item);
 
     }
@@ -100,21 +95,13 @@ public class SessionRepo {
 	    BatchGetItemOutcome outcome = dynamoDB.batchGetItem(keysAndAttributes);
 
 	    for (String tn : outcome.getTableItems().keySet()) {
-		System.out.println("Items in table " + tn);
 		List<Item> items = outcome.getTableItems().get(tn);
 		allItems.addAll(items);
-		for (Item item : items) {
-		    System.out.print(item + " ");
-		}
-		System.out.println();
 	    }
 
 	    unprocessed = outcome.getUnprocessedKeys();
 
-	    if (unprocessed.isEmpty()) {
-		System.out.println("No unprocessed keys found");
-	    } else {
-		System.out.println("Retrieving the unprocessed keys");
+	    if (!unprocessed.isEmpty()) {
 		outcome = dynamoDB.batchGetItemUnprocessed(unprocessed);
 	    }
 	} while (!unprocessed.isEmpty());
@@ -154,5 +141,4 @@ public class SessionRepo {
 	    e.printStackTrace();
 	}
     }
-
 }

@@ -25,9 +25,6 @@ public class SessionService {
     @ConfigProperty(name = "share.notAllow")
     Optional<List<String>> disAllowed;
 
-    private Function<Item, ShareData> convertItemToShareData = i -> new ShareData(i.getString(SessionRepo.primaryKey),
-	    i.getMap(SessionRepo.queryColumn));
-
     public List<ResponseData> get(Request req) {
 	String serviceName = req.getServiceName();
 	List<Item> items = new ArrayList<>();
@@ -58,4 +55,8 @@ public class SessionService {
     public void setSessionRepo(SessionRepo repo) {
 	this.repo = repo;
     }
+    
+    private Function<Item, ShareData> convertItemToShareData = i -> new ShareData(i.getString(SessionRepo.primaryKey),
+	    i.getMap(SessionRepo.queryColumn));
+
 }
