@@ -1,30 +1,66 @@
-# dynamodb-quickstart project
+# quarkus-dynamodb project
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This project uses Quarkus and DynamoDB.
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Running the application
 
-## Running the application in dev mode
+You can run this application by following below steps:
 
-You can run your application in dev mode that enables live coding using:
-```
-./mvnw quarkus:dev
-```
+* mvn package
 
-## Packaging and running the application
+* docker build -f src/main/docker/Dockerfile.jvm -t quarkus/dynamodb-quickstart-jvm .
 
-The application can be packaged using `./mvnw package`.
-It produces the `dynamodb-quickstart-1.0-SNAPSHOT-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+* docker-compose up
 
-The application is now runnable using `java -jar target/dynamodb-quickstart-1.0-SNAPSHOT-runner.jar`.
+## Application Structure
 
-## Creating a native executable
+This service is able to securely store session data from multiple microservices. This application is able share data between multiple authorized microservices.
 
-You can create a native executable using: `./mvnw package -Pnative`.
+This application becomes aware of applications that can and cannot share data among them via external variables:
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
+* share.allow=A,B ( A and B can share data between them)
+* share.notAllow=C (C can only access data that it itself stored)
 
-You can then execute your native executable with: `./target/dynamodb-quickstart-1.0-SNAPSHOT-runner`
+When application comes up, it checks if the table structure to store the data is already in place, and if not, it creates the tables and loads initial data into it. 
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image-guide.
+Data is structured in the following way:
+
+`{
+    "Items": [
+        {
+            "serviceName": {
+                "S": "C"
+            },
+            "sharedData": {
+                "M": {
+                    "four": {
+                        "S": "40"
+                    }
+                }
+            }
+        }
+     ]
+ }`
+ 
+ Each service will get it's own document identified by "serviceName" attribute in the database and data that can be shared will be stored under sharedData attribute as a Map. 
+ 
+ ## Request Structure
+ 
+ Different microservices can call this application by sending a JSON in a REST request. Following data can be sent:
+ 
+ POST http://localhost:8090/storesessiondata 
+ 
+ `{
+    "serviceName":"B",
+    "sharedData": {
+        "KEY1": "VALUE",
+        "KEY2": "VALUE"
+    }
+
+}`
+
+GET http://localhost:8090/storesessiondata
+`{
+    "serviceName":"A",
+    "key":"KEY1"
+}`
