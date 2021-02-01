@@ -16,7 +16,7 @@ You can run this application by following below steps:
 
 This service is able to securely store session data from multiple microservices. This application is able share data between multiple authorized microservices.
 
-This application becomes aware of applications that can and cannot share data among them via external variables:
+This application becomes aware of applications that can and cannot share data among them via external variables configured in application.properties:
 
 * share.allow=A,B ( A and B can share data between them)
 * share.notAllow=C (C can only access data that it itself stored)
