@@ -65,8 +65,8 @@ public class SessionRepo {
     private void createTable(String tableName) {
 	try {
 	    Table table = dynamoDB.createTable(tableName,
-		    Arrays.asList(new KeySchemaElement("serviceName", KeyType.HASH)),
-		    Arrays.asList(new AttributeDefinition("serviceName", ScalarAttributeType.S)),
+		    Arrays.asList(new KeySchemaElement(primaryKey, KeyType.HASH)),
+		    Arrays.asList(new AttributeDefinition(primaryKey, ScalarAttributeType.S)),
 		    new ProvisionedThroughput(10L, 10L));
 	    table.waitForActive();
 	} catch (Exception e) {
@@ -81,7 +81,7 @@ public class SessionRepo {
 	sharedData.put("one", "1");
 	sharedData.put("two", "2");
 	sharedData.put("three", "3");
-	Item item = new Item().withPrimaryKey("serviceName", serviceName).withMap("sharedData", sharedData);
+	Item item = new Item().withPrimaryKey(primaryKey, serviceName).withMap(queryColumn, sharedData);
 	table.putItem(item);
 
     }
