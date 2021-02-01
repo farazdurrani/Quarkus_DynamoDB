@@ -27,6 +27,9 @@ public class StoreSessionData {
     @POST
     public Response add(ShareData data) {
 	service.add(data);
-	return Response.ok().build();
+	StringBuilder sb = new StringBuilder();
+	data.getSharedData().values().forEach(d -> sb.append(d + " "));
+	sb.append("added to database");
+	return Response.ok(sb.toString()).build();
     }
 }

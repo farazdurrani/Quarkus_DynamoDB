@@ -1,13 +1,17 @@
 version: '3.8'
+
+volumes: 
+  dynamodb_data:
+
 services:
   dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -sharedDb -optimizeDbBeforeStartup -dbPath ./data"
+    command: "-jar DynamoDBLocal.jar -sharedDb -optimizeDbBeforeStartup -dbPath /home/dynamodblocal"
     image: "amazon/dynamodb-local:latest"
     container_name: dynamodb-local
     ports:
       - "8000:8000"
     volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
+      - dynamodb_data:/home/dynamodblocal
     working_dir: /home/dynamodblocal
   quarkus-local:
     image: quarkus/dynamodb-quickstart-jvm

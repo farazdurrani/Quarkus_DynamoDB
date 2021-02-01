@@ -83,7 +83,6 @@ public class SessionRepo {
 	sharedData.put("three", "3");
 	Item item = new Item().withPrimaryKey(primaryKey, serviceName).withMap(queryColumn, sharedData);
 	table.putItem(item);
-
     }
 
     public List<Item> getSpecificData(Object... primaryKeyValues) {
@@ -93,14 +92,11 @@ public class SessionRepo {
 	    TableKeysAndAttributes keysAndAttributes = new TableKeysAndAttributes(tableName);
 	    keysAndAttributes.addHashOnlyPrimaryKeys(primaryKey, primaryKeyValues);
 	    BatchGetItemOutcome outcome = dynamoDB.batchGetItem(keysAndAttributes);
-
 	    for (String tn : outcome.getTableItems().keySet()) {
 		List<Item> items = outcome.getTableItems().get(tn);
 		allItems.addAll(items);
 	    }
-
 	    unprocessed = outcome.getUnprocessedKeys();
-
 	    if (!unprocessed.isEmpty()) {
 		outcome = dynamoDB.batchGetItemUnprocessed(unprocessed);
 	    }
