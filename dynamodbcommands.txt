@@ -1,3 +1,23 @@
-aws dynamodb scan --table-name sm1 --endpoint-url http://localhost:8000
+%JAVA_HOME%/bin/java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb
+
+aws dynamodb scan --table-name sharedData --endpoint-url http://localhost:8000
 
 aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+GET http://localhost:8080/storesessiondata
+Body:
+{
+    "serviceName":"A",
+    "key":"four"
+}
+
+POST http://localhost:8080/storesessiondata
+Body:
+{
+    "serviceName":"B",
+    "sharedData": {
+        "four": "40",
+        "six": "6"
+    }
+
+}

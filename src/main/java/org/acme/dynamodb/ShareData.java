@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 @RegisterForReflection
 public class ShareData {
@@ -18,12 +17,6 @@ public class ShareData {
     public ShareData(String serviceName, Map<String, String> sharedData) {
 	this.serviceName = serviceName;
 	this.sharedData = sharedData;
-    }
-
-    public static ShareData from(Map<String, AttributeValue> item) {
-	ShareData fruit = new ShareData();
-
-	return fruit;
     }
 
     public String getServiceName() {
