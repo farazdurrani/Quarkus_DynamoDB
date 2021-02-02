@@ -40,16 +40,16 @@ public class SessionRepo {
 
     private DynamoDB dynamoDB;
 
-    static final String tableName = "sharedData";
-    static final String primaryKey = "serviceName";
-    static final String queryColumn = "sharedData";
+    static final String DYNAMO_TABLE_NAME = "sharedData";
+    static final String DYNAMO_PRIMARY_KEY = "serviceName";
+    static final String DYNAMO_QUERY_COLUMN = "sharedData";
 
     void startup(@Observes StartupEvent event) {
 	dynamoDB = new DynamoDB(AmazonDynamoDBClientBuilder.standard()
 		.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(dataSourceUrl, "local")).build());
-	if (!isTableExist(tableName)) {
-	    createTable(tableName);
-	    loadInitialData(tableName);
+	if (!isTableExist(DYNAMO_TABLE_NAME)) {
+	    createTable(DYNAMO_TABLE_NAME);
+	    loadInitialData(DYNAMO_TABLE_NAME);
 	}
     }
 
@@ -65,8 +65,8 @@ public class SessionRepo {
     private void createTable(String tableName) {
 	try {
 	    Table table = dynamoDB.createTable(tableName,
-		    Arrays.asList(new KeySchemaElement(primaryKey, KeyType.HASH)),
-		    Arrays.asList(new AttributeDefinition(primaryKey, ScalarAttributeType.S)),
+		    Arrays.asList(new KeySchemaElement(DYNAMO_PRIMARY_KEY, KeyType.HASH)),
+		    Arrays.asList(new AttributeDefinition(DYNAMO_PRIMARY_KEY, ScalarAttributeType.S)),
 		    new ProvisionedThroughput(10L, 10L));
 	    table.waitForActive();
 	} catch (Exception e) {
@@ -81,7 +81,7 @@ public class SessionRepo {
 	sharedData.put("one", "1");
 	sharedData.put("two", "2");
 	sharedData.put("three", "3");
-	Item item = new Item().withPrimaryKey(primaryKey, serviceName).withMap(queryColumn, sharedData);
+	Item item = new Item().withPrimaryKey(DYNAMO_PRIMARY_KEY, serviceName).withMap(DYNAMO_QUERY_COLUMN, sharedData);
 	table.putItem(item);
     }
 
@@ -89,8 +89,8 @@ public class SessionRepo {
 	List<Item> allItems = new ArrayList<>();
 	Map<String, KeysAndAttributes> unprocessed = null;
 	do {
-	    TableKeysAndAttributes keysAndAttributes = new TableKeysAndAttributes(tableName);
-	    keysAndAttributes.addHashOnlyPrimaryKeys(primaryKey, primaryKeyValues);
+	    TableKeysAndAttributes keysAndAttributes = new TableKeysAndAttributes(DYNAMO_TABLE_NAME);
+	    keysAndAttributes.addHashOnlyPrimaryKeys(DYNAMO_PRIMARY_KEY, primaryKeyValues);
 	    BatchGetItemOutcome outcome = dynamoDB.batchGetItem(keysAndAttributes);
 	    for (String tn : outcome.getTableItems().keySet()) {
 		List<Item> items = outcome.getTableItems().get(tn);
@@ -105,16 +105,14 @@ public class SessionRepo {
     }
 
     public void upsert(String primaryKeyValue, String queryColumnKey, String queryColumnValue) {
-	upsert(tableName, primaryKey, primaryKeyValue, queryColumn, queryColumnKey, queryColumnValue);
+	upsert(DYNAMO_TABLE_NAME, DYNAMO_PRIMARY_KEY, primaryKeyValue, DYNAMO_QUERY_COLUMN, queryColumnKey,
+		queryColumnValue);
     }
 
     private void upsert(String tableName, String primaryKey, String primaryKeyValue, String updateColumn, String newKey,
 	    String newValue) {
-
-	// Configuration to connect to DynamoDB
 	Table table = dynamoDB.getTable(tableName);
 	try {
-	    // Updates when map is already exist in the table
 	    UpdateItemSpec updateItemSpec = new UpdateItemSpec().withPrimaryKey(primaryKey, primaryKeyValue)
 		    .withReturnValues(ReturnValue.ALL_NEW)
 		    .withUpdateExpression("set #columnName." + newKey + " = :columnValue")
@@ -123,7 +121,6 @@ public class SessionRepo {
 		    .withConditionExpression("attribute_exists(" + updateColumn + ")");
 
 	    table.updateItem(updateItemSpec);
-	    // Add map column when it's not exist in the table
 	} catch (ConditionalCheckFailedException e) {
 	    HashMap<String, String> map = new HashMap<>();
 	    map.put(newKey, newValue);

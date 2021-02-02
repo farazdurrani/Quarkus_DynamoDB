@@ -56,7 +56,7 @@ public class SessionService {
 	this.repo = repo;
     }
     
-    private Function<Item, ShareData> convertItemToShareData = i -> new ShareData(i.getString(SessionRepo.primaryKey),
-	    i.getMap(SessionRepo.queryColumn));
+    private Function<Item, ShareData> convertItemToShareData = i -> new ShareData(i.getString(SessionRepo.DYNAMO_PRIMARY_KEY),
+	    i.getMap(SessionRepo.DYNAMO_QUERY_COLUMN));
 
 }
